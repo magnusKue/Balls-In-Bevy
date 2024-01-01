@@ -1,12 +1,23 @@
 use bevy::prelude::*;
 
-pub mod components;
+use crate::score::resources::*;
+use crate::star::resources::*;
+use crate::enemy::resources::*;
+
+use crate::player::systems::*;
+use crate::enemy::systems::*;
+use crate::star::systems::*;
+use crate::score::systems::*;
+
+
 pub mod events;
-pub mod resources;
+pub mod enemy;
+pub mod player;
+pub mod score;
+pub mod star;
 mod systems;
 
 use events::*;
-use resources::*;
 use systems::*;
 
 
