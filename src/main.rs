@@ -1,4 +1,8 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::{
+    prelude::*, 
+    window::PrimaryWindow, 
+    app::AppExit, transform::commands
+};
 use rand::random;
 
 pub const PLAYER_SPEED: f32 = 500.0;
@@ -6,7 +10,8 @@ pub const PLAYER_SIZE: f32 = 64.0;
 
 pub const ENEMY_SIZE: f32 = 64.0;
 pub const ENEMY_SPEED: f32 = 450.0;
-pub const NUMBER_OF_ENEMIES: usize = 6;
+pub const NUMBER_OF_ENEMIES: usize = 1;
+pub const ENEMY_RESPAWN_TIMER: f32 = 1.0;
 
 pub const STAR_SIZE: f32 = 30.0;
 pub const NUMBER_OF_STARS: usize = 4;
@@ -17,6 +22,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .init_resource::<Score>()
         .init_resource::<StarSpawnTimer>()
+        .init_resource::<EnemySpawnTimer>()
+        .add_event::<GameOver>()
         .add_systems(Startup, (
             spawn_player,
             spawn_camera,
@@ -34,11 +41,25 @@ fn main() {
             enemy_hit_player,
             player_hit_star,
 
-            update_score,
             tick_star_spawn_timer,
-            spawn_stars_over_time
+            spawn_stars_over_time,
+            
+            update_score,
+
+            tick_enemy_spawn_timer,
+            spawn_enemies_over_time,
+        
+            exit_game,
+            handle_game_over
         ))
         .run()
+}
+
+//? Events
+
+#[derive(Event)]
+pub struct GameOver {
+    pub score: u32
 }
 
 //? COMPONENTS
@@ -79,6 +100,19 @@ impl Default for StarSpawnTimer {
     fn default() -> StarSpawnTimer {
         StarSpawnTimer {
             timer: Timer::from_seconds(STAR_RESPAWN_TIMER, TimerMode::Repeating)
+        }
+    }
+}
+
+#[derive(Resource)]
+pub struct EnemySpawnTimer {
+    pub timer: Timer,
+}
+
+impl Default for EnemySpawnTimer {
+    fn default() -> EnemySpawnTimer {
+        EnemySpawnTimer {
+            timer: Timer::from_seconds(ENEMY_RESPAWN_TIMER, TimerMode::Repeating)
         }
     }
 }
@@ -312,13 +346,12 @@ pub fn confine_enemy_position(
 //? INTERACTION SYSTEMS
 
 pub fn enemy_hit_player(
-    mut commands: Commands,
+    mut event_writer: EventWriter<GameOver>,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     mut enemy_query: Query<(&mut Enemy, &Transform)>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>
+    score: Res<Score>
 ) {
-    if let Ok((player_entity, player_transform)) = player_query.get_single_mut() {
+    if let Ok((_, player_transform)) = player_query.get_single_mut() {
         let mut collision: bool = false;
 
         for (_, enemy_transform) in enemy_query.iter_mut() {
@@ -336,30 +369,7 @@ pub fn enemy_hit_player(
             }
         }
         if collision {
-            let window = window_query.get_single().unwrap();
-            println!("Game Over!");
-            let sound_effect = asset_server.load("audio/explosionCrunch_000.ogg");
-
-            commands.spawn(
-                AudioBundle {
-                    source: sound_effect,
-                    settings: PlaybackSettings::DESPAWN,
-                    ..default()
-                }
-            );
-            
-            commands.spawn(
-                SpriteBundle {
-                    texture: asset_server.load("sprites/game_over.png"),
-                    transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
-                    ..default()
-                }
-            );
-
-            commands.entity(player_entity).despawn();
-            for (mut enemy, _) in enemy_query.iter_mut() {
-                enemy.speed = 0.0;
-            }
+            event_writer.send(GameOver {score: score.value});
         }
     }
 }
@@ -412,6 +422,16 @@ pub fn tick_star_spawn_timer(
     }
 }
 
+pub fn tick_enemy_spawn_timer(
+    mut enemy_spawn_timer: ResMut<EnemySpawnTimer>,
+    player_query: Query<&Transform, With<Player>>,
+    time: Res<Time>
+) {
+    if player_query.get_single().is_ok() {
+        enemy_spawn_timer.timer.tick(time.delta());
+    }
+}
+
 pub fn spawn_stars_over_time(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
@@ -433,6 +453,85 @@ pub fn spawn_stars_over_time(
                 },
                 Star { }
             ));
+        }
+    }
+}
+
+pub fn spawn_enemies_over_time(
+    spawn_timer: Res<EnemySpawnTimer>,
+    mut commands: Commands,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    asset_server: Res<AssetServer>
+) {
+    if spawn_timer.timer.finished() {
+        let window = window_query.get_single().unwrap(); 
+        for _ in 0..NUMBER_OF_ENEMIES {
+            commands.spawn((
+                SpriteBundle {
+                    texture: asset_server.load("sprites/ball_red_large.png"),
+                    transform: Transform::from_xyz(
+                        rand::random::<f32>() * (window.width()  - STAR_SIZE) + (0.5 * ENEMY_SIZE), 
+                        rand::random::<f32>() * (window.width()  - STAR_SIZE) + (0.5 * ENEMY_SIZE), 
+                        0.0
+                    ),
+                    ..default()
+                },
+                Enemy {
+                    direction: Vec2::new(
+                        rand::random::<f32>(), 
+                        rand::random::<f32>()
+                    ).normalize_or_zero(),
+                    speed: ENEMY_SPEED
+                }
+            ));
+        }
+    }
+}
+
+pub fn exit_game(
+    keyboard_input: Res<Input<KeyCode>>,
+    mut app_exit_event_writer: EventWriter<AppExit>
+) {
+    if keyboard_input.pressed(KeyCode::Escape) {
+        app_exit_event_writer.send(AppExit);
+    }
+}
+
+pub fn handle_game_over(
+    window_query: Query<&Window, With<PrimaryWindow>>,
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut event_reader: EventReader<GameOver>,
+    mut player_query: Query<(Entity, &Transform), With<Player>>,
+    mut enemy_query: Query<(&mut Enemy, &Transform)>
+){
+    for event in event_reader.read() {
+        let window = window_query.get_single().unwrap();
+        println!("Game Over!");
+        let sound_effect = asset_server.load("audio/explosionCrunch_000.ogg");
+        
+        commands.spawn(
+            AudioBundle {
+                source: sound_effect,
+                settings: PlaybackSettings::DESPAWN,
+                ..default()
+            }
+        );
+        
+        commands.spawn(
+            SpriteBundle {
+                texture: asset_server.load("sprites/game_over.png"),
+                transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
+                ..default()
+            }
+        );
+        
+        if let Ok((player_entity, _)) = player_query.get_single_mut() {
+            commands.entity(player_entity).despawn();
+        }
+
+        for (mut enemy, _) in enemy_query.iter_mut() {
+            enemy.speed = 0.0;
         }
     }
 }
