@@ -8,7 +8,7 @@ use colored::*;
 use crate::enemy::components::*;
 use crate::player::components::*;
 use crate::events::*;
-use crate::Score;
+use crate::score::resources::Score;
 
 pub fn spawn_camera(
     mut commands: Commands,
