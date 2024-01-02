@@ -8,12 +8,13 @@ mod main_menu;
 use game::GamePlugin;
 use main_menu::MainMenuPlugin;
 
-use systems::*;
+use crate::systems::*;
 
 fn main() {
     App::new()
         // Plugins
         .add_plugins(DefaultPlugins)
+        .add_state::<AppState>()
         .add_plugins((
             GamePlugin,
             MainMenuPlugin
@@ -25,4 +26,12 @@ fn main() {
             handle_game_over,
         ))
         .run()
+}
+
+#[derive(States, Debug, Clone, Copy, Eq, PartialEq, Hash, Default)]
+pub enum AppState {
+    #[default]
+    MainMenu,
+    Game,
+    GameOver
 }
