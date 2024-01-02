@@ -1,8 +1,8 @@
 use bevy::{prelude::*, window::PrimaryWindow};
 use rand::random;
 
-use crate::star::{resources::*, components::*};
-use crate::player::components::Player;
+use crate::game::star::{resources::*, components::*};
+use crate::game::player::components::Player;
 
 pub const STAR_SIZE: f32 = 30.0;
 pub const NUMBER_OF_STARS: usize = 4;

@@ -1,32 +1,24 @@
 use bevy::prelude::*;
 
-
-mod enemy;
-mod player;
-mod score;
-mod star;
-
 mod events;
 mod systems;
+mod game;
+mod main_menu;
 
-use events::*;
+use game::GamePlugin;
+use main_menu::MainMenuPlugin;
+
 use systems::*;
-
-use enemy::EnemyPlugin;
-use player::PlayerPlugin;
-use star::StarPlugin;
-use score::ScorePlugin;
 
 fn main() {
     App::new()
+        // Plugins
         .add_plugins(DefaultPlugins)
-        .add_event::<GameOver>()
         .add_plugins((
-            StarPlugin,
-            PlayerPlugin,
-            EnemyPlugin,
-            ScorePlugin
+            GamePlugin,
+            MainMenuPlugin
         ))
+        // Systems
         .add_systems(Startup, spawn_camera)
         .add_systems(Update, (
             exit_game,

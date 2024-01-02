@@ -8,7 +8,7 @@ use super::ENEMY_SPEED;
 use super::components::*;
 use super::resources::*;
 
-use crate::player::components::Player;
+use crate::game::player::components::Player;
 
 pub fn spawn_enemies(
     mut commands: Commands,

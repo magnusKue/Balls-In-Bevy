@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use colored::*;
 
-use crate::score::resources::*;
-use crate::GameOver;
+use crate::game::score::resources::*;
+use crate::game::GameOver;
 
 pub fn update_score(
     score: Res<Score>

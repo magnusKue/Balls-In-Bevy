@@ -5,10 +5,10 @@ use bevy::{
 };
 use colored::*;
 
-use crate::enemy::components::*;
-use crate::player::components::*;
-use crate::events::*;
-use crate::score::resources::Score;
+use crate::game::enemy::components::*;
+use crate::game::player::components::*;
+use crate::game::score::resources::Score;
+use crate::events::GameOver;
 
 pub fn spawn_camera(
     mut commands: Commands,
