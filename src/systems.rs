@@ -8,8 +8,6 @@ use colored::*;
 
 use crate::AppState;
 use crate::game::SimulationState;
-use crate::game::enemy::components::*;
-use crate::game::player::components::*;
 use crate::game::score::resources::Score;
 use crate::events::GameOver;
 
@@ -67,8 +65,6 @@ pub fn handle_game_over(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut event_reader: EventReader<GameOver>,
-    mut player_query: Query<(Entity, &Transform), With<Player>>,
-    mut enemy_query: Query<(&mut Enemy, &Transform)>,
     score: Res<Score>,
     mut next_state: ResMut<NextState<AppState>>
 ){
