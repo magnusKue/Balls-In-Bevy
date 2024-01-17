@@ -36,7 +36,7 @@ pub fn transition_to_game_state(
         if *app_state != AppState::Game {
             commands.insert_resource(NextState(Some(AppState::Game)));
             commands.insert_resource(NextState(Some(SimulationState::Paused)));
-            println!("Transitioned to Appstate::Game");
+            println!("Entered Appstate::Game");
         }
     }
 }
@@ -49,7 +49,7 @@ pub fn transition_to_main_menu_state(
     if keyboard_input.pressed(KeyCode::M) {
         if *app_state != AppState::MainMenu {
             commands.insert_resource(NextState(Some(AppState::MainMenu)));
-            println!("Transitioned to Appstate::MainMenu");
+            println!("Entered Appstate::MainMenu");
         }
     }
 }
@@ -69,7 +69,8 @@ pub fn handle_game_over(
     mut event_reader: EventReader<GameOver>,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     mut enemy_query: Query<(&mut Enemy, &Transform)>,
-    score: Res<Score>
+    score: Res<Score>,
+    mut next_state: ResMut<NextState<AppState>>
 ){
     for _ in event_reader.read() {
         println!("{} {}","Game Over! Final score:".red() ,score.value.to_string().green().bold());
@@ -82,7 +83,9 @@ pub fn handle_game_over(
                 ..default()
             }
         );
-        
-        commands.insert_resource(NextState(Some(AppState::GameOver)));
+
+        //commands.insert_resource(NextState(Some(AppState::GameOver)));
+        next_state.set(AppState::GameOver); // this is the prefered way but does the same thing
+        println!("Entered AppState::GameOver");
     }
 }
