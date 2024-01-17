@@ -3,8 +3,11 @@ use bevy::{
     window::PrimaryWindow, 
     app::AppExit
 };
+
 use colored::*;
 
+use crate::AppState;
+use crate::game::SimulationState;
 use crate::game::enemy::components::*;
 use crate::game::player::components::*;
 use crate::game::score::resources::Score;
@@ -24,6 +27,33 @@ pub fn spawn_camera(
     );
 }
 
+pub fn transition_to_game_state(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    app_state: Res<State<AppState>>
+) {
+    if keyboard_input.pressed(KeyCode::G) {
+        if *app_state != AppState::Game {
+            commands.insert_resource(NextState(Some(AppState::Game)));
+            commands.insert_resource(NextState(Some(SimulationState::Paused)));
+            println!("Transitioned to Appstate::Game");
+        }
+    }
+}
+
+pub fn transition_to_main_menu_state(
+    mut commands: Commands,
+    keyboard_input: Res<Input<KeyCode>>,
+    app_state: Res<State<AppState>>
+) {
+    if keyboard_input.pressed(KeyCode::M) {
+        if *app_state != AppState::MainMenu {
+            commands.insert_resource(NextState(Some(AppState::MainMenu)));
+            println!("Transitioned to Appstate::MainMenu");
+        }
+    }
+}
+
 pub fn exit_game(
     keyboard_input: Res<Input<KeyCode>>,
     mut app_exit_event_writer: EventWriter<AppExit>
@@ -34,7 +64,6 @@ pub fn exit_game(
 }
 
 pub fn handle_game_over(
-    window_query: Query<&Window, With<PrimaryWindow>>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut event_reader: EventReader<GameOver>,
@@ -43,7 +72,6 @@ pub fn handle_game_over(
     score: Res<Score>
 ){
     for _ in event_reader.read() {
-        let window = window_query.get_single().unwrap();
         println!("{} {}","Game Over! Final score:".red() ,score.value.to_string().green().bold());
         let sound_effect = asset_server.load("audio/explosionCrunch_000.ogg");
         
@@ -55,20 +83,6 @@ pub fn handle_game_over(
             }
         );
         
-        commands.spawn(
-            SpriteBundle {
-                texture: asset_server.load("sprites/game_over.png"),
-                transform: Transform::from_xyz(window.width() / 2.0, window.height() / 2.0, 0.0),
-                ..default()
-            }
-        );
-        
-        if let Ok((player_entity, _)) = player_query.get_single_mut() {
-            commands.entity(player_entity).despawn();
-        }
-
-        for (mut enemy, _) in enemy_query.iter_mut() {
-            enemy.speed = 0.0;
-        }
+        commands.insert_resource(NextState(Some(AppState::GameOver)));
     }
 }

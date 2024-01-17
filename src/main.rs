@@ -23,7 +23,9 @@ fn main() {
         .add_systems(Startup, spawn_camera)
         .add_systems(Update, (
             exit_game,
-            handle_game_over,
+            handle_game_over.run_if(in_state(AppState::Game)),
+            transition_to_main_menu_state,
+            transition_to_game_state
         ))
         .run()
 }

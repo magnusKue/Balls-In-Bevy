@@ -7,7 +7,7 @@ pub fn toggle_simulation(
     keyboard_input: Res<Input<KeyCode>>,
     simulation_state: Res<State<SimulationState>>
 ) {
-    if keyboard_input.pressed(KeyCode::Space) {
+    if keyboard_input.just_pressed(KeyCode::Space) {
         if *simulation_state == SimulationState::Running {
             commands.insert_resource(NextState(Some(SimulationState::Paused)));
             println!("Simulation paused");

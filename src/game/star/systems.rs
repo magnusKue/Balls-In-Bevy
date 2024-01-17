@@ -29,6 +29,15 @@ pub fn spawn_stars(
     }
 }
 
+pub fn despawn_stars(
+    mut commands: Commands,
+    star_query: Query<Entity, With<Star>>
+) {
+    for entity in star_query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
 pub fn tick_star_spawn_timer(
     mut star_spawn_timer: ResMut<StarSpawnTimer>,
     player_query: Query<&Transform, With<Player>>,

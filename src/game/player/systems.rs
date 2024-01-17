@@ -27,6 +27,15 @@ pub fn spawn_player(
     );
 }
 
+pub fn despawn_player(
+    mut commands: Commands,
+    player_query: Query<Entity, With<Player>>
+) {
+    for entity in player_query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
 pub fn player_movement(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_query: Query<&mut Transform, With<Player>>,
@@ -91,7 +100,7 @@ pub fn confine_player_movement(
     }
 }
 
-pub fn enemy_hit_player(
+pub fn player_hit_enemy(
     mut event_writer: EventWriter<GameOver>,
     mut player_query: Query<(Entity, &Transform), With<Player>>,
     mut enemy_query: Query<(&mut Enemy, &Transform)>,
@@ -147,7 +156,6 @@ pub fn player_hit_star(
                         ..default()
                     }
                 );
-
             }
         };
     }
