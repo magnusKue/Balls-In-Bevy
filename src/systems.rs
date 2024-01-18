@@ -81,7 +81,7 @@ pub fn handle_game_over(
         );
 
         //commands.insert_resource(NextState(Some(AppState::GameOver)));
-        next_state.set(AppState::GameOver); // this is the prefered way but does the same thing
-        println!("Entered AppState::GameOver");
+        next_state.set(AppState::MainMenu); // this is the prefered way but does the same thing
+        println!("Entered AppState::MainMenu");
     }
 }
