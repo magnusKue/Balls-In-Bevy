@@ -75,7 +75,8 @@ pub fn build_main_menu (
                     ..default()
             });
             // Text
-            parent.spawn(TextBundle {
+            parent.spawn(
+                TextBundle {
                 text: Text {
                     sections: vec![
                         TextSection::new(
