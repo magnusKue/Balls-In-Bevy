@@ -4,4 +4,6 @@ Simple 2d topdown game which has the player avoid enemies and collect stars to m
 
 ## How to play:
 
-The game is auto paused on launch so youll need to press space to resume
+The game is auto paused on launch so you'll need to press "space" to resume.
+To switch between the game and the main menu you can use "g" and "m".
+Score is only printed to the console, there is no HUD.
